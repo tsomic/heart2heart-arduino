@@ -2,6 +2,7 @@
 #include <WebSocketsClient.h>
 #include <ArduinoJson.h>
 #include <OneButton.h>
+#include <Servo.h>
 
 // remove this line if you don't have your credentials stored in a custom 'credentials' library
 #include <credentials.h>
@@ -21,6 +22,8 @@ const char* host = HOST;
 const uint16_t port = PORT;
 
 WebSocketsClient webSocket;
+Servo Servo_SG90;
+const int SERVO_MAX = 180;
 
 const int PIN_BUTTON = 13;
 OneButton button(PIN_BUTTON, false);
@@ -32,6 +35,8 @@ void setup() {
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
+  Servo_SG90.attach(5);
+  Servo_SG90.write(0);
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
@@ -70,9 +75,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     currentMode = mode;
 
     if (pressed == 1) {
-      digitalWrite(LED_BUILTIN, LOW);
-      delay(500);
-      digitalWrite(LED_BUILTIN, HIGH);
+      handlePress();
     } else {
       for (int i = 0; i < currentMode; i++) {
         digitalWrite(LED_BUILTIN, LOW);
@@ -103,12 +106,44 @@ void send(int mode, bool pressed) {
 
 void click() {
   send(currentMode, true);
+  if (currentMode == 2) {
+    hideHeart();
+  }
 }
 
 void longPress() {
   int newMode = currentMode == NUMBER_MODES ? 1 : currentMode + 1;
   currentMode = newMode;
   send(currentMode, false);
+  hideHeart();
+}
+
+void handlePress() {
+  if (currentMode == 1) {
+    mode1Press();
+  } else if (currentMode == 2) {
+    mode2Press();
+  }
+}
+
+void mode1Press() {
+  showHeart();
+  delay(500);
+  hideHeart();
+}
+
+void mode2Press() {
+  showHeart();
+}
+
+void showHeart() {
+  digitalWrite(LED_BUILTIN, LOW);
+  Servo_SG90.write(SERVO_MAX);
+}
+
+void hideHeart() {
+  digitalWrite(LED_BUILTIN, HIGH);
+  Servo_SG90.write(0);
 }
 
 void loop() {
