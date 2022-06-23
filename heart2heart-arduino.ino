@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <WebSocketsClient.h>
 #include <ArduinoJson.h>
+#include <OneButton.h>
 
 // remove this line if you don't have your credentials stored in a custom 'credentials' library
 #include <credentials.h>
@@ -21,6 +22,10 @@ const uint16_t port = PORT;
 
 WebSocketsClient webSocket;
 
+const int PIN_BUTTON = 13;
+OneButton button(PIN_BUTTON, false);
+
+const int NUMBER_MODES = 2;
 int currentMode = 1;
 
 void setup() {
@@ -46,6 +51,8 @@ void setup() {
   webSocket.onEvent(webSocketEvent);
 
   webSocket.setReconnectInterval(5000);
+  button.attachClick(click);
+  button.attachLongPressStart(longPress);
 }
 
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
@@ -94,6 +101,17 @@ void send(int mode, bool pressed) {
   Serial.println(output);
 }
 
+void click() {
+  send(currentMode, true);
+}
+
+void longPress() {
+  int newMode = currentMode == NUMBER_MODES ? 1 : currentMode + 1;
+  currentMode = newMode;
+  send(currentMode, false);
+}
+
 void loop() {
+  button.tick();
   webSocket.loop();
 }
