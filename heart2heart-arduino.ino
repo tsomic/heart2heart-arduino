@@ -4,6 +4,8 @@
 #include <OneButton.h>
 #include <Servo.h>
 
+#include "LEDController.h"
+
 // remove this line if you don't have your credentials stored in a custom 'credentials' library
 #include <credentials.h>
 
@@ -15,11 +17,15 @@
 #define PORT 80
 #endif
 
+
 const char* ssid = WIFI_SSID;
 const char* password = WIFI_PASSWORD;
 const char* headers = HEADERS;
 const char* host = HOST;
 const uint16_t port = PORT;
+
+const int BEAT_DURATION = 1000;
+int beatTimer = -1;
 
 WebSocketsClient webSocket;
 Servo Servo_SG90;
@@ -35,6 +41,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
+  LEDController.init();
   Servo_SG90.attach(5);
   Servo_SG90.write(0);
 
@@ -128,8 +135,7 @@ void handlePress() {
 
 void mode1Press() {
   showHeart();
-  delay(500);
-  hideHeart();
+  beatTimer = BEAT_DURATION;
 }
 
 void mode2Press() {
@@ -139,14 +145,24 @@ void mode2Press() {
 void showHeart() {
   digitalWrite(LED_BUILTIN, LOW);
   Servo_SG90.write(SERVO_MAX);
+  LEDController.start();
 }
 
 void hideHeart() {
   digitalWrite(LED_BUILTIN, HIGH);
   Servo_SG90.write(0);
+  LEDController.stop();
 }
 
 void loop() {
+  if (beatTimer > 0) {
+    beatTimer--;
+  } else if (beatTimer == 0) {
+    beatTimer--;
+    hideHeart();
+  }
+  
   button.tick();
+  LEDController.tick();
   webSocket.loop();
 }
