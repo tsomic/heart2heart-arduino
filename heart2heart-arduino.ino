@@ -41,7 +41,6 @@ void setup() {
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
-  LEDController.init();
   Servo_SG90.attach(5);
   Servo_SG90.write(0);
 
@@ -52,6 +51,8 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
+
+  LEDController.init(1);
 
   Serial.println("");
   Serial.println("WiFi connected");
@@ -80,6 +81,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     const bool pressed = json["pressed"];
 
     currentMode = mode;
+    LEDController.changePaletteConfig(mode);
 
     if (pressed == 1) {
       handlePress();

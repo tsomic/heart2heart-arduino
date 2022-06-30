@@ -5,6 +5,13 @@
 #define BRIGHTNESS  64
 #define UPDATES_PER_SECOND 100
 
+struct PaletteConfig{
+   CRGBPalette16 palette;
+   int loopDelay;
+   float speed;
+   int loopCount;
+};
+
 const int FADE_DURATION = 255;
 
 CRGB leds[NUM_LEDS];
@@ -12,20 +19,21 @@ CRGB leds[NUM_LEDS];
 uint8_t startIndex = 0;
 int stopTimer = -1;
 bool isRunning = false;
-CRGBPalette16 currentPalette;
-CRGBPalette16 beatPalette;
+
+PaletteConfig paletteConfigs[3];
+int currentPaletteConfig;
 
 class LEDController {
 public:
   LEDController();
   
-  void init() {
+  void init(int defaultPaletteConfig) {
     FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     FastLED.setBrightness(BRIGHTNESS);
     reset();
     
-    setupBeatPalette();
-    currentPalette = beatPalette;
+    setupPalettes();
+    currentPaletteConfig = defaultPaletteConfig;
   }
 
   void tick() {
@@ -37,31 +45,28 @@ public:
         stopTimer--;
         reset();
       }
-  
-      //if (stopTimer > 1) {
-        //stopTimer--;
-        //FastLED.setBrightness(stopTimer);
-      //}
+      Serial.println(startIndex);
       
       startIndex++;
       fillLEDsFromPaletteColors(startIndex);
     
       FastLED.show();
-      FastLED.delay(1000 / UPDATES_PER_SECOND);
-
-      //if (stopTimer == 1) {
-        //reset();
-      //}
+      FastLED.delay(1000 / UPDATES_PER_SECOND / paletteConfigs[currentPaletteConfig].speed);
     }
   }
 
   void start() {
     isRunning = true;
+    stopTimer = -1;
     FastLED.setBrightness(BRIGHTNESS);
   }
 
   void stop() {
     stopTimer = FADE_DURATION;
+  }
+
+  void changePaletteConfig(int configIndex) {
+    currentPaletteConfig = configIndex;
   }
 
 private:
@@ -76,14 +81,19 @@ private:
   void fillLEDsFromPaletteColors( uint8_t colorIndex) {
     const int QUARTER = NUM_LEDS / 4;
     for( int i = 0; i < QUARTER; i++) {
-      leds[i + QUARTER] = ColorFromPalette( currentPalette, colorIndex);
-      leds[NUM_LEDS / 2 - i - 1 - QUARTER] = ColorFromPalette( currentPalette, colorIndex);
-      leds[NUM_LEDS - i - 1 - QUARTER] = ColorFromPalette( currentPalette, colorIndex);
-      leds[NUM_LEDS / 2 + i + QUARTER] = ColorFromPalette( currentPalette, colorIndex);
+      leds[i + QUARTER] = ColorFromPalette( paletteConfigs[currentPaletteConfig].palette, colorIndex);
+      leds[NUM_LEDS / 2 - i - 1 - QUARTER] = ColorFromPalette( paletteConfigs[currentPaletteConfig].palette, colorIndex);
+      leds[NUM_LEDS - i - 1 - QUARTER] = ColorFromPalette( paletteConfigs[currentPaletteConfig].palette, colorIndex);
+      leds[NUM_LEDS / 2 + i + QUARTER] = ColorFromPalette( paletteConfigs[currentPaletteConfig].palette, colorIndex);
       colorIndex++;
     }
   }
-    
+
+  void setupPalettes() {
+    setupBeatPalette();
+    setupBreathePalette();
+  }
+
   void setupBeatPalette() {
     const int LENGTH_PULSE_SHORT = 6;
     const int LENGTH_PULSE_LONG = 11;
@@ -99,10 +109,25 @@ private:
       gradient[i + PULSE_OFFSET + 2] = CHSV(0, 255, (LENGTH_PULSE_LONG - i) * 255/LENGTH_PULSE_LONG);
     }
   
-    beatPalette = CRGBPalette16(gradient[0],  gradient[1],  gradient[2],  gradient[3],
-                                gradient[4],  gradient[5],  gradient[6],  gradient[7],
-                                gradient[8],  gradient[9],  gradient[10],  gradient[11],
-                                gradient[12],  gradient[13],  gradient[14],  gradient[15]);
+    paletteConfigs[1] = {CRGBPalette16(gradient), 0, 1, -1};
+  }
+
+  void setupBreathePalette() {
+    CRGB gradient[16];
+    const int MAX_BRIGHTNESS = 70;
+    const int FADE_DURATION = 16;
+
+    fill_solid( gradient, 16, CRGB::Black);
+
+    for (int i = 0; i < FADE_DURATION; i++) {
+      int value = (cos((2 * PI / FADE_DURATION) * i - PI) + 1) / 2 * MAX_BRIGHTNESS;
+      if (value <= 3) {
+        //value = 0;
+      }
+      gradient[i] = CHSV(0, 255, value);
+    }
+
+    paletteConfigs[2] = {CRGBPalette16(gradient), 255, 0.5, -1};
   }
 };
 
