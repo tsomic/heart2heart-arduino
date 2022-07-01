@@ -114,6 +114,9 @@ void send(int mode, bool pressed) {
 }
 
 void click() {
+  LEDController.reset();
+  LEDController.changePaletteConfig(0);
+  LEDController.start();
   send(currentMode, true);
   if (currentMode == 2) {
     hideHeart();
@@ -131,6 +134,7 @@ void handlePress() {
   if (currentMode == 1) {
     mode1Press();
   } else if (currentMode == 2) {
+    beatTimer = -1;
     mode2Press();
   }
 }

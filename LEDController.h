@@ -6,7 +6,7 @@
 #define UPDATES_PER_SECOND 100
 
 struct PaletteConfig{
-   CRGBPalette16 palette;
+   CRGBPalette32 palette;
    int loopDelay;
    float speed;
    int loopCount;
@@ -19,6 +19,8 @@ CRGB leds[NUM_LEDS];
 uint8_t startIndex = 0;
 int stopTimer = -1;
 bool isRunning = false;
+int delayTimer = 0;
+int loopCounter = 0;
 
 PaletteConfig paletteConfigs[3];
 int currentPaletteConfig;
@@ -45,19 +47,38 @@ public:
         stopTimer--;
         reset();
       }
-      Serial.println(startIndex);
+
+      if (startIndex == 255) {
+        if (delayTimer == 0) {
+          delayTimer = paletteConfigs[currentPaletteConfig].loopDelay;
+        } else {
+          delayTimer--;
+          FastLED.delay(1000 / UPDATES_PER_SECOND / paletteConfigs[currentPaletteConfig].speed);
+        }
+        if (delayTimer == 0) {
+          startIndex++;
+          loopCounter++;
+
+          if (loopCounter == paletteConfigs[currentPaletteConfig].loopCount) {
+            reset();
+          }
+        }
+      }
       
-      startIndex++;
-      fillLEDsFromPaletteColors(startIndex);
-    
-      FastLED.show();
-      FastLED.delay(1000 / UPDATES_PER_SECOND / paletteConfigs[currentPaletteConfig].speed);
+      if (startIndex != 255 && isRunning) {
+        startIndex++;
+        fillLEDsFromPaletteColors(startIndex);
+      
+        FastLED.show();
+        FastLED.delay(1000 / UPDATES_PER_SECOND / paletteConfigs[currentPaletteConfig].speed);
+      }
     }
   }
 
   void start() {
     isRunning = true;
     stopTimer = -1;
+    loopCounter = 0;
     FastLED.setBrightness(BRIGHTNESS);
   }
 
@@ -69,15 +90,17 @@ public:
     currentPaletteConfig = configIndex;
   }
 
-private:
   void reset() {
     isRunning = false;
     stopTimer = -1;
     startIndex = 0;
+    delayTimer = 0;
+    loopCounter = 0;
     fill_solid(leds, NUM_LEDS, CRGB::Black);
     FastLED.show();
   }
-  
+
+private:
   void fillLEDsFromPaletteColors( uint8_t colorIndex) {
     const int QUARTER = NUM_LEDS / 4;
     for( int i = 0; i < QUARTER; i++) {
@@ -90,44 +113,60 @@ private:
   }
 
   void setupPalettes() {
+    setupClickPalette();
     setupBeatPalette();
     setupBreathePalette();
   }
 
   void setupBeatPalette() {
-    const int LENGTH_PULSE_SHORT = 6;
-    const int LENGTH_PULSE_LONG = 11;
-    const int PULSE_OFFSET = 3;
-    CRGB gradient[16];
-    fill_solid( gradient, 16, CRGB::Black);
+    const int LENGTH_PULSE_SHORT = 12;
+    const int LENGTH_PULSE_LONG = 22;
+    const int PULSE_OFFSET = 6;
+    const int START_OFFSET = 4;
+    CRGB gradient[32];
+    fill_solid( gradient, 32, CRGB::Black);
   
     for (int i = 0; i < PULSE_OFFSET; i++) {
-      gradient[i + 2] = CHSV(0, 255, (LENGTH_PULSE_SHORT - i) * 255/LENGTH_PULSE_SHORT);
+      gradient[i + START_OFFSET] = CHSV(0, 255, (LENGTH_PULSE_SHORT - i) * 255/LENGTH_PULSE_SHORT);
     }
   
     for (int i = 0; i < LENGTH_PULSE_LONG; i++) {
-      gradient[i + PULSE_OFFSET + 2] = CHSV(0, 255, (LENGTH_PULSE_LONG - i) * 255/LENGTH_PULSE_LONG);
+      gradient[i + PULSE_OFFSET + START_OFFSET] = CHSV(0, 255, (LENGTH_PULSE_LONG - i) * 255/LENGTH_PULSE_LONG);
     }
   
-    paletteConfigs[1] = {CRGBPalette16(gradient), 0, 1, -1};
+    paletteConfigs[1] = {CRGBPalette32(gradient), 0, 1, -1};
   }
 
   void setupBreathePalette() {
-    CRGB gradient[16];
+    CRGB gradient[32];
     const int MAX_BRIGHTNESS = 70;
-    const int FADE_DURATION = 16;
+    const int FADE_DURATION = 32;
 
-    fill_solid( gradient, 16, CRGB::Black);
-
+    fill_solid( gradient, 32, CRGB::Black);
+    
     for (int i = 0; i < FADE_DURATION; i++) {
       int value = (cos((2 * PI / FADE_DURATION) * i - PI) + 1) / 2 * MAX_BRIGHTNESS;
       if (value <= 3) {
-        //value = 0;
+        value = 0;
       }
       gradient[i] = CHSV(0, 255, value);
     }
+    
 
-    paletteConfigs[2] = {CRGBPalette16(gradient), 255, 0.5, -1};
+    paletteConfigs[2] = {CRGBPalette32(gradient), 120, 0.5, -1};
+  }
+
+  void setupClickPalette() {
+    const int PADDING = 4;
+    CRGB gradient[32];
+
+    fill_solid( gradient, 32, CRGB::Black);
+
+    for (int i = 0; i < 3; i++) {
+      gradient[i + PADDING] = CHSV(0, 255, 100);
+    }
+    
+    paletteConfigs[0] = {CRGBPalette32(gradient), 0, 1, 1};
   }
 };
 
