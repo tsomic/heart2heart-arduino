@@ -24,18 +24,18 @@ const char* headers = HEADERS;
 const char* host = HOST;
 const uint16_t port = PORT;
 
-const int BEAT_DURATION = 1000;
-int beatTimer = -1;
+const uint16_t BEAT_DURATION = 1000;
+int16_t beatTimer = -1;
 
 WebSocketsClient webSocket;
 Servo Servo_SG90;
-const int SERVO_MAX = 180;
+const uint8_t SERVO_MAX = 180;
 
-const int PIN_BUTTON = 13;
+const uint8_t PIN_BUTTON = 13;
 OneButton button(PIN_BUTTON, false);
 
-const int NUMBER_MODES = 2;
-int currentMode = 1;
+const uint8_t NUMBER_MODES = 2;
+uint8_t currentMode = 1;
 
 void setup() {
   Serial.begin(115200);
@@ -77,7 +77,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     
     deserializeJson(json, payload);
 
-    const int mode = json["mode"];
+    const uint8_t mode = json["mode"];
     const bool pressed = json["pressed"];
 
     currentMode = mode;
@@ -86,7 +86,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     if (pressed == 1) {
       handlePress();
     } else {
-      for (int i = 0; i < currentMode; i++) {
+      for (uint8_t i = 0; i < currentMode; i++) {
         digitalWrite(LED_BUILTIN, LOW);
         delay(200);
         digitalWrite(LED_BUILTIN, HIGH);
@@ -96,7 +96,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
   }
 }
 
-void send(int mode, bool pressed) {
+void send(uint8_t mode, bool pressed) {
   Serial.println("received message:");
 
   StaticJsonDocument<200> json;

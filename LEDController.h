@@ -7,29 +7,29 @@
 
 struct PaletteConfig{
    CRGBPalette32 palette;
-   int loopDelay;
+   uint8_t loopDelay;
    float speed;
-   int loopCount;
+   uint8_t loopCount;
 };
 
-const int FADE_DURATION = 255;
+const uint16_t FADE_DURATION = 256;
 
 CRGB leds[NUM_LEDS];
 
 uint8_t startIndex = 0;
-int stopTimer = -1;
+int16_t stopTimer = -1;
 bool isRunning = false;
-int delayTimer = 0;
-int loopCounter = 0;
+uint8_t delayTimer = 0;
+uint8_t loopCounter = 0;
 
 PaletteConfig paletteConfigs[3];
-int currentPaletteConfig;
+uint8_t currentPaletteConfig;
 
 class LEDController {
 public:
   LEDController();
   
-  void init(int defaultPaletteConfig) {
+  void init(uint8_t defaultPaletteConfig) {
     FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     FastLED.setBrightness(BRIGHTNESS);
     reset();
@@ -86,7 +86,7 @@ public:
     stopTimer = FADE_DURATION;
   }
 
-  void changePaletteConfig(int configIndex) {
+  void changePaletteConfig(uint8_t configIndex) {
     currentPaletteConfig = configIndex;
   }
 
@@ -102,7 +102,7 @@ public:
 
 private:
   void fillLEDsFromPaletteColors( uint8_t colorIndex) {
-    const int QUARTER = NUM_LEDS / 4;
+    const uint8_t QUARTER = NUM_LEDS / 4;
     for( int i = 0; i < QUARTER; i++) {
       leds[i + QUARTER] = ColorFromPalette( paletteConfigs[currentPaletteConfig].palette, colorIndex);
       leds[NUM_LEDS / 2 - i - 1 - QUARTER] = ColorFromPalette( paletteConfigs[currentPaletteConfig].palette, colorIndex);
@@ -119,18 +119,18 @@ private:
   }
 
   void setupBeatPalette() {
-    const int LENGTH_PULSE_SHORT = 12;
-    const int LENGTH_PULSE_LONG = 22;
-    const int PULSE_OFFSET = 6;
-    const int START_OFFSET = 4;
+    const uint8_t LENGTH_PULSE_SHORT = 12;
+    const uint8_t LENGTH_PULSE_LONG = 22;
+    const uint8_t PULSE_OFFSET = 6;
+    const uint8_t START_OFFSET = 4;
     CRGB gradient[32];
     fill_solid( gradient, 32, CRGB::Black);
   
-    for (int i = 0; i < PULSE_OFFSET; i++) {
+    for (uint8_t i = 0; i < PULSE_OFFSET; i++) {
       gradient[i + START_OFFSET] = CHSV(0, 255, (LENGTH_PULSE_SHORT - i) * 255/LENGTH_PULSE_SHORT);
     }
   
-    for (int i = 0; i < LENGTH_PULSE_LONG; i++) {
+    for (uint8_t i = 0; i < LENGTH_PULSE_LONG; i++) {
       gradient[i + PULSE_OFFSET + START_OFFSET] = CHSV(0, 255, (LENGTH_PULSE_LONG - i) * 255/LENGTH_PULSE_LONG);
     }
   
@@ -139,13 +139,13 @@ private:
 
   void setupBreathePalette() {
     CRGB gradient[32];
-    const int MAX_BRIGHTNESS = 70;
-    const int FADE_DURATION = 32;
+    const uint8_t MAX_BRIGHTNESS = 70;
+    const uint8_t FADE_DURATION = 32;
 
     fill_solid( gradient, 32, CRGB::Black);
     
-    for (int i = 0; i < FADE_DURATION; i++) {
-      int value = (cos((2 * PI / FADE_DURATION) * i - PI) + 1) / 2 * MAX_BRIGHTNESS;
+    for (uint8_t i = 0; i < FADE_DURATION; i++) {
+      uint8_t value = (cos((2 * PI / FADE_DURATION) * i - PI) + 1) / 2 * MAX_BRIGHTNESS;
       if (value <= 3) {
         value = 0;
       }
@@ -157,12 +157,12 @@ private:
   }
 
   void setupClickPalette() {
-    const int PADDING = 4;
+    const uint8_t PADDING = 4;
     CRGB gradient[32];
 
     fill_solid( gradient, 32, CRGB::Black);
 
-    for (int i = 0; i < 3; i++) {
+    for (uint8_t i = 0; i < 3; i++) {
       gradient[i + PADDING] = CHSV(0, 255, 100);
     }
     
