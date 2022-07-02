@@ -17,31 +17,29 @@
 #define PORT 80
 #endif
 
-
 const char* ssid = WIFI_SSID;
 const char* password = WIFI_PASSWORD;
 const char* headers = HEADERS;
 const char* host = HOST;
 const uint16_t port = PORT;
 
-const uint16_t BEAT_DURATION = 1000;
-int16_t beatTimer = -1;
+#define BEAT_DURATION 1000
+#define SERVO_MAX 180
+#define PIN_SERVO 5
+#define PIN_BUTTON 13
+#define NUMBER_MODES 2
 
+int16_t beatTimer = -1;
 WebSocketsClient webSocket;
 Servo Servo_SG90;
-const uint8_t SERVO_MAX = 180;
-
-const uint8_t PIN_BUTTON = 13;
 OneButton button(PIN_BUTTON, false);
-
-const uint8_t NUMBER_MODES = 2;
 uint8_t currentMode = 1;
 
 void setup() {
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
-  Servo_SG90.attach(5);
+  Servo_SG90.attach(PIN_SERVO);
   Servo_SG90.write(0);
 
   WiFi.mode(WIFI_STA);
@@ -69,12 +67,12 @@ void setup() {
 }
 
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
-  if(type == WStype_TEXT) {
+  if (type == WStype_TEXT) {
     Serial.println("received message:");
     Serial.println((char *)payload);
 
     StaticJsonDocument<200> json;
-    
+
     deserializeJson(json, payload);
 
     const uint8_t mode = json["mode"];
@@ -103,12 +101,12 @@ void send(uint8_t mode, bool pressed) {
 
   json["mode"] = mode;
   json["pressed"] = pressed;
-  
+
   String output;
   serializeJson(json, output);
 
   webSocket.sendTXT(output);
-  
+
   Serial.println("sent message:");
   Serial.println(output);
 }
@@ -167,7 +165,7 @@ void loop() {
     beatTimer--;
     hideHeart();
   }
-  
+
   button.tick();
   LEDController.tick();
   webSocket.loop();
