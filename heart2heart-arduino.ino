@@ -79,7 +79,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     const bool pressed = json["pressed"];
 
     currentMode = mode;
-    LEDController.changePaletteConfig(mode);
+    LEDController.changePaletteConfig(mode - 1);
 
     if (pressed == 1) {
       handlePress();
@@ -113,7 +113,7 @@ void send(uint8_t mode, bool pressed) {
 
 void click() {
   LEDController.reset();
-  LEDController.changePaletteConfig(0);
+  LEDController.changePaletteConfig(2);
   LEDController.start();
   send(currentMode, true);
   if (currentMode == 2) {

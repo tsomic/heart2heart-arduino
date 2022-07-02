@@ -10,14 +10,13 @@ struct PaletteConfig {
   CRGBPalette32 palette;
   uint8_t loopDelay;
   float speed;
-  uint8_t loopCount;
+  bool repeat;
 };
 
 PaletteConfig paletteConfigs[3];
 int16_t stopTimer;
 bool isRunning;
 uint8_t delayTimer;
-uint8_t loopCounter;
 uint8_t currentPaletteConfig;
 CRGB leds[NUM_LEDS];
 uint8_t startIndex;
@@ -54,9 +53,8 @@ class LEDController {
           }
           if (delayTimer == 0) {
             startIndex++;
-            loopCounter++;
 
-            if (loopCounter == paletteConfigs[currentPaletteConfig].loopCount) {
+            if (!paletteConfigs[currentPaletteConfig].repeat) {
               reset();
             }
           }
@@ -75,7 +73,6 @@ class LEDController {
     void start() {
       isRunning = true;
       stopTimer = -1;
-      loopCounter = 0;
       FastLED.setBrightness(BRIGHTNESS);
     }
 
@@ -92,7 +89,6 @@ class LEDController {
       stopTimer = -1;
       startIndex = 0;
       delayTimer = 0;
-      loopCounter = 0;
       fill_solid(leds, NUM_LEDS, CRGB::Black);
       FastLED.show();
     }
@@ -131,7 +127,7 @@ class LEDController {
         gradient[i + PULSE_OFFSET + START_OFFSET] = CHSV(0, 255, (LENGTH_PULSE_LONG - i) * 255 / LENGTH_PULSE_LONG);
       }
 
-      paletteConfigs[1] = {CRGBPalette32(gradient), 0, 1, -1};
+      paletteConfigs[0] = {CRGBPalette32(gradient), 0, 1, true};
     }
 
     void setupBreathePalette() {
@@ -150,7 +146,7 @@ class LEDController {
       }
 
 
-      paletteConfigs[2] = {CRGBPalette32(gradient), 120, 0.5, -1};
+      paletteConfigs[1] = {CRGBPalette32(gradient), 120, 0.5, true};
     }
 
     void setupClickPalette() {
@@ -159,11 +155,11 @@ class LEDController {
 
       fill_solid( gradient, 32, CRGB::Black);
 
-      for (uint8_t i = 0; i < 3; i++) {
+      for (uint8_t i = 0; i < 2; i++) {
         gradient[i + PADDING] = CHSV(0, 255, 100);
       }
 
-      paletteConfigs[0] = {CRGBPalette32(gradient), 0, 1, 1};
+      paletteConfigs[2] = {CRGBPalette32(gradient), 0, 1, false};
     }
 };
 
