@@ -13,7 +13,7 @@ struct PaletteConfig {
   bool repeat;
 };
 
-PaletteConfig paletteConfigs[3];
+PaletteConfig paletteConfigs[5];
 int16_t stopTimer;
 bool isRunning;
 uint8_t delayTimer;
@@ -38,7 +38,7 @@ class LEDController {
       if (isRunning) {
         if (stopTimer > 0) {
           stopTimer--;
-          FastLED.setBrightness(stopTimer);
+          FastLED.setBrightness(min(stopTimer, (int16_t)BRIGHTNESS));
         } else if (stopTimer == 0) {
           stopTimer--;
           reset();
@@ -109,6 +109,8 @@ class LEDController {
       setupClickPalette();
       setupBeatPalette();
       setupBreathePalette();
+      setupMode1ChangePalette();
+      setupMode2ChangePalette();
     }
 
     void setupBeatPalette() {
@@ -139,14 +141,14 @@ class LEDController {
 
       for (uint8_t i = 0; i < DURATION; i++) {
         uint8_t value = (cos((2 * PI / DURATION) * i - PI) + 1) / 2 * MAX_BRIGHTNESS;
-        if (value <= 3) {
+        if (value <= 10) {
           value = 0;
         }
         gradient[i] = CHSV(0, 255, value);
       }
 
 
-      paletteConfigs[1] = {CRGBPalette32(gradient), 120, 0.5, true};
+      paletteConfigs[1] = {CRGBPalette32(gradient), 120, 0.4, true};
     }
 
     void setupClickPalette() {
@@ -160,6 +162,14 @@ class LEDController {
       }
 
       paletteConfigs[2] = {CRGBPalette32(gradient), 0, 1, false};
+    }
+
+    void setupMode1ChangePalette() {
+      paletteConfigs[3] = {paletteConfigs[0].palette, 0, 1.5, false};
+    }
+    
+    void setupMode2ChangePalette() {
+      paletteConfigs[4] = {paletteConfigs[1].palette, 0, 1.5, false};
     }
 };
 

@@ -122,9 +122,17 @@ void click() {
 }
 
 void longPress() {
-  int newMode = currentMode == NUMBER_MODES ? 1 : currentMode + 1;
-  currentMode = newMode;
-  send(currentMode, false);
+  currentMode = currentMode == NUMBER_MODES ? 1 : currentMode + 1;
+  bool pressed = false;
+  LEDController.reset();
+  if (currentMode == 1) {
+    LEDController.changePaletteConfig(3);
+  } else if (currentMode == 2) {
+    LEDController.changePaletteConfig(4);
+    pressed = true;
+  }
+  LEDController.start();
+  send(currentMode, pressed);
   hideHeart();
 }
 
