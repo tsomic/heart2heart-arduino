@@ -2,8 +2,8 @@
 #include <WebSocketsClient.h>
 #include <ArduinoJson.h>
 #include <OneButton.h>
-#include <Servo.h>
 
+#include "ServoController.h"
 #include "LEDController.h"
 
 // remove this line if you don't have your credentials stored in a custom 'credentials' library
@@ -24,14 +24,12 @@ const char* host = HOST;
 const uint16_t port = PORT;
 
 #define BEAT_DURATION 1000
-#define SERVO_MAX 180
-#define PIN_SERVO 5
 #define PIN_BUTTON 13
 #define NUMBER_MODES 2
 
 int16_t beatTimer = -1;
 WebSocketsClient webSocket;
-Servo Servo_SG90;
+
 OneButton button(PIN_BUTTON, false);
 uint8_t currentMode = 1;
 
@@ -39,8 +37,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
-  Servo_SG90.attach(PIN_SERVO);
-  Servo_SG90.write(0);
+  ServoController.init();
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
@@ -68,9 +65,6 @@ void setup() {
 
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
   if (type == WStype_TEXT) {
-    Serial.println("received message:");
-    Serial.println((char *)payload);
-
     StaticJsonDocument<200> json;
 
     deserializeJson(json, payload);
@@ -95,8 +89,6 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 }
 
 void send(uint8_t mode, bool pressed) {
-  Serial.println("received message:");
-
   StaticJsonDocument<200> json;
 
   json["mode"] = mode;
@@ -106,9 +98,6 @@ void send(uint8_t mode, bool pressed) {
   serializeJson(json, output);
 
   webSocket.sendTXT(output);
-
-  Serial.println("sent message:");
-  Serial.println(output);
 }
 
 void click() {
@@ -116,9 +105,7 @@ void click() {
   LEDController.changePaletteConfig(2);
   LEDController.start();
   send(currentMode, true);
-  if (currentMode == 2) {
-    hideHeart();
-  }
+  hideHeart();
 }
 
 void longPress() {
@@ -156,13 +143,13 @@ void mode2Press() {
 
 void showHeart() {
   digitalWrite(LED_BUILTIN, LOW);
-  Servo_SG90.write(SERVO_MAX);
+  ServoController.showHeart();
   LEDController.start();
 }
 
 void hideHeart() {
   digitalWrite(LED_BUILTIN, HIGH);
-  Servo_SG90.write(0);
+  ServoController.hideHeart();
   LEDController.stop();
 }
 
@@ -176,5 +163,6 @@ void loop() {
 
   button.tick();
   LEDController.tick();
+  ServoController.tick();
   webSocket.loop();
 }

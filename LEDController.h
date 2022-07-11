@@ -4,7 +4,7 @@
 #define NUM_LEDS 64
 #define BRIGHTNESS 64
 #define UPDATES_PER_SECOND 100
-#define FADE_DURATION 256
+#define FADE_DURATION 128
 
 struct PaletteConfig {
   CRGBPalette32 palette;
@@ -140,7 +140,7 @@ class LEDController {
       fill_solid( gradient, 32, CRGB::Black);
 
       for (uint8_t i = 0; i < DURATION; i++) {
-        uint8_t value = (cos((2 * PI / DURATION) * i - PI) + 1) / 2 * MAX_BRIGHTNESS;
+        uint8_t value = (cos(2 * PI / DURATION * i - PI) + 1) / 2 * MAX_BRIGHTNESS;
         if (value <= 10) {
           value = 0;
         }
@@ -165,11 +165,11 @@ class LEDController {
     }
 
     void setupMode1ChangePalette() {
-      paletteConfigs[3] = {paletteConfigs[0].palette, 0, 1.5, false};
+      paletteConfigs[3] = {paletteConfigs[0].palette, 0, 3, false};
     }
     
     void setupMode2ChangePalette() {
-      paletteConfigs[4] = {paletteConfigs[1].palette, 0, 1.5, false};
+      paletteConfigs[4] = {paletteConfigs[1].palette, 0, 3, false};
     }
 };
 
