@@ -37,7 +37,9 @@ void setup() {
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
+  
   ServoController.init();
+  LEDController.init(currentMode);
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
@@ -46,8 +48,6 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-
-  LEDController.init(1);
 
   Serial.println("");
   Serial.println("WiFi connected");
@@ -59,8 +59,8 @@ void setup() {
   webSocket.onEvent(webSocketEvent);
 
   webSocket.setReconnectInterval(5000);
-  button.attachClick(click);
-  button.attachLongPressStart(longPress);
+  button.attachClick(buttonPress);
+  button.attachLongPressStart(buttonLongPress);
 }
 
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
@@ -77,13 +77,6 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 
     if (pressed == 1) {
       handlePress();
-    } else {
-      for (uint8_t i = 0; i < currentMode; i++) {
-        digitalWrite(LED_BUILTIN, LOW);
-        delay(200);
-        digitalWrite(LED_BUILTIN, HIGH);
-        delay(200);
-      }
     }
   }
 }
@@ -100,7 +93,7 @@ void send(uint8_t mode, bool pressed) {
   webSocket.sendTXT(output);
 }
 
-void click() {
+void buttonPress() {
   LEDController.reset();
   LEDController.changePaletteConfig(2);
   LEDController.start();
@@ -108,7 +101,7 @@ void click() {
   hideHeart();
 }
 
-void longPress() {
+void buttonLongPress() {
   currentMode = currentMode == NUMBER_MODES ? 1 : currentMode + 1;
   bool pressed = false;
   LEDController.reset();
@@ -125,30 +118,28 @@ void longPress() {
 
 void handlePress() {
   if (currentMode == 1) {
-    mode1Press();
+    activateMode1();
   } else if (currentMode == 2) {
     beatTimer = -1;
-    mode2Press();
+    activateMode2();
   }
 }
 
-void mode1Press() {
+void activateMode1() {
   showHeart();
   beatTimer = BEAT_DURATION;
 }
 
-void mode2Press() {
+void activateMode2() {
   showHeart();
 }
 
 void showHeart() {
-  digitalWrite(LED_BUILTIN, LOW);
   ServoController.showHeart();
   LEDController.start();
 }
 
 void hideHeart() {
-  digitalWrite(LED_BUILTIN, HIGH);
   ServoController.hideHeart();
   LEDController.stop();
 }
