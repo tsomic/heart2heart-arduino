@@ -24,19 +24,22 @@ const char* host = HOST;
 const uint16_t port = PORT;
 
 #define BEAT_DURATION 1000
-#define PIN_BUTTON 13
+#define BUTTON 13
+#define SWITCH 14
 #define NUMBER_MODES 2
 
 int16_t beatTimer = -1;
 WebSocketsClient webSocket;
 
-OneButton button(PIN_BUTTON, false);
+OneButton button(BUTTON, false);
 uint8_t currentMode = 1;
 
 void setup() {
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
+
+  pinMode(SWITCH, INPUT);
   
   ServoController.init();
   LEDController.init(currentMode);
@@ -150,6 +153,14 @@ void loop() {
   } else if (beatTimer == 0) {
     beatTimer--;
     hideHeart();
+  }
+
+  if (digitalRead(SWITCH) == HIGH) {
+    LEDController.activateNightMode();
+    ServoController.activateNightMode();
+  } else {
+    LEDController.disableNightMode();
+    ServoController.disableNightMode();
   }
 
   button.tick();

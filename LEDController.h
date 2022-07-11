@@ -2,9 +2,10 @@
 
 #define LED_PIN 4
 #define NUM_LEDS 64
-#define BRIGHTNESS 64
 #define UPDATES_PER_SECOND 100
 #define FADE_DURATION 128
+#define BRIGHTNESS 64
+#define BRIGHTNESS_NIGHT 0
 
 struct PaletteConfig {
   CRGBPalette32 palette;
@@ -73,7 +74,6 @@ class LEDController {
     void start() {
       isRunning = true;
       stopTimer = -1;
-      FastLED.setBrightness(BRIGHTNESS);
     }
 
     void stop() {
@@ -91,6 +91,14 @@ class LEDController {
       delayTimer = 0;
       fill_solid(leds, NUM_LEDS, CRGB::Black);
       FastLED.show();
+    }
+
+    void activateNightMode() {
+      FastLED.setBrightness(BRIGHTNESS_NIGHT);
+    }
+
+    void disableNightMode() {
+      FastLED.setBrightness(BRIGHTNESS);
     }
 
   private:

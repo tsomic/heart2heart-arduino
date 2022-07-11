@@ -3,16 +3,17 @@
 #define SERVO_PIN 5
 #define SERVO_MAX 180
 #define SERVO_MIN 0
+#define SERVO_DURATION 700
+#define SERVO_SPEED 6
+#define SERVO_SPEED_NIGHT 1
 
 Servo servo;
 
-int16_t servoPos = SERVO_MIN;
-uint8_t servoSpeed = 2;
+int32_t servoPos = SERVO_MIN;
+uint8_t servoSpeed = SERVO_SPEED;
 
 bool showing = false;
 bool hiding = false;
-
-uint8_t servoPosMap[SERVO_MAX];
 
 class ServoController {
   public:
@@ -21,7 +22,6 @@ class ServoController {
     void init() {
       servo.attach(SERVO_PIN, 480, 2400);
       servo.write(SERVO_MIN);
-      setupServoPosMap();
     }
 
     void tick() {
@@ -33,8 +33,8 @@ class ServoController {
         servoPos -= servoSpeed;
       }
 
-      if (servoPos >= SERVO_MAX) {
-        servoPos = SERVO_MAX;
+      if (servoPos >= SERVO_DURATION) {
+        servoPos = SERVO_DURATION;
         showing = false;
       } else if (servoPos <= SERVO_MIN) {
         servoPos = SERVO_MIN;
@@ -42,7 +42,7 @@ class ServoController {
       }
 
       if (servoStartPos != servoPos) {
-        servo.write(servoPosMap[servoPos - 1]);
+        servo.write((cos(PI / SERVO_DURATION * servoPos - PI) + 1) / 2 * SERVO_MAX);
       }
     }
 
@@ -56,12 +56,12 @@ class ServoController {
       hiding = true;
     }
 
-  private:
-    void setupServoPosMap() {
-      for (uint8_t i = 0; i < SERVO_MAX; i++) {
-        uint8_t value = (cos(PI / SERVO_MAX * i - PI) + 1) / 2 * SERVO_MAX;
-        servoPosMap[i] = value;
-      }
+    void activateNightMode() {
+      servoSpeed = SERVO_SPEED_NIGHT;
+    }
+
+    void disableNightMode() {
+      servoSpeed = SERVO_SPEED;
     }
 };
 
