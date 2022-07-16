@@ -39,7 +39,8 @@ class LEDController {
       if (isRunning) {
         if (stopTimer > 0) {
           stopTimer--;
-          FastLED.setBrightness(min(stopTimer, (int16_t)BRIGHTNESS));
+          
+          FastLED.setBrightness(min(stopTimer, (int16_t)FastLED.getBrightness()));
         } else if (stopTimer == 0) {
           stopTimer--;
           reset();
